@@ -1,7 +1,8 @@
 import pyautogui
 
-last_position = (None,None)
+last_position = (None, None)
 last_dir = ''
+
 
 def keypress():
     ''' 
@@ -24,10 +25,10 @@ def trackpad_mouse():
     def on_move(x, y):
         # put your code here
         pass
-        
 
     with mouse.Listener(on_move=on_move) as listener:
-        listener.join() 
+        listener.join()
+
 
 def color_tracker():
     import cv2
@@ -43,7 +44,7 @@ def color_tracker():
 
     # set the limit for the number of frames to store and the number that have seen direction change
     buffer = 20
-    pts = deque(maxlen = buffer)
+    pts = deque(maxlen=buffer)
 
     # store the direction and number of frames with direction change
     num_frames = 0
@@ -51,17 +52,14 @@ def color_tracker():
     direction = ''
     global last_dir
 
-    #Sleep for 2 seconds to let camera initialize properly
+    # Sleep for 2 seconds to let camera initialize properly
     time.sleep(2)
-    #Start video capture
+    # Start video capture
     vs = mw.WebcamVideoStream().start()
-
 
     while True:
         # your code here
         continue
-        
-
 
 
 def finger_tracking():
@@ -72,9 +70,9 @@ def finger_tracking():
     import multithreaded_webcam as mw
     import mediapipe as mp
 
-    ##Sleep for 2 seconds to let camera initialize properly
+    # Sleep for 2 seconds to let camera initialize properly
     time.sleep(2)
-    #Start video capture
+    # Start video capture
     vs = mw.WebcamVideoStream().start()
 
     # put your code here
@@ -83,6 +81,7 @@ def finger_tracking():
 def unique_control():
     # put your code here
     pass
+
 
 def main():
     control_mode = input("How would you like to control the game? ")
@@ -97,5 +96,6 @@ def main():
     elif control_mode == '5':
         unique_control()
 
+
 if __name__ == '__main__':
-	main()
+    main()
