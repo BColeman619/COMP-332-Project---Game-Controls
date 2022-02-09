@@ -15,7 +15,7 @@ def keypress():
     while True:
         if keyboard.is_pressed('a'):                            # function works according to terminal, but not sure on how to test with the games
             pyautogui.press('left')
-            #print("left")
+                    #print("left")
         elif keyboard.is_pressed('d'):
             pyautogui.press('right')
             #print("right")
