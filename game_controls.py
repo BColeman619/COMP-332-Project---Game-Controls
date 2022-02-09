@@ -17,16 +17,16 @@ def keypress():
         # function works according to terminal, but not sure on how to test with the games
         if keyboard.is_pressed('a'):
             pyautogui.press('left')
-            # print("left")
+            # print("left")----- Testing
         elif keyboard.is_pressed('d'):
             pyautogui.press('right')
-            # print("right")
+            # print("right")----- Testing
         elif keyboard.is_pressed('s'):
             pyautogui.press('down')
-            # print("down")
+            # print("down")----- Testing
         elif keyboard.is_pressed('w'):
             pyautogui.press('up')
-            # print("up")
+            # print("up")----- Testing
 
 
 def trackpad_mouse():
@@ -41,11 +41,29 @@ def trackpad_mouse():
         # if last_position[0] == None and last_position[1] == None:
         #last_position = (pyautogui.position())
 
+        if not all(last_position):  # Check if tuple has any 'None' value
+            # Set x and y values in last_position to the current location
+            last_position(x, y)
+        else:
+            # find the difference between the old x & y positions
+            difference = tuple(
+                x-y for x, y in zip(last_position,  last_position(x, y)))
+
+            x_pos_dis = difference[0]
+            y_pos_dis = difference[1]
+            """ TODO
+            THIS IS NEXT THE TOP SHOULD WORK
+            Given that there will always be some small movement with your hand when you are holding still, you need to check to see if the absolute differences are greater than some threshold. You should choose this threshold by trying out different numbers and see what works for your group. Only if the x difference or y difference is greater than the threshold should you try to use it for a direction. We use this threshold to prevent trying to move left 30 times for a single movement. Instead we only update our direction and position if we have moved far enough.
+            
+             """
+
         # print("None")
         pass
 
     with mouse.Listener(on_move=on_move) as listener:
         listener.join()
+
+# End trackpad_mouse()------------------------------------------------------ #
 
 
 def color_tracker():
