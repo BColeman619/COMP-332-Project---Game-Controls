@@ -12,8 +12,20 @@ def keypress():
     import keyboard
 
     # put your code here
-
-
+    while True:
+        if keyboard.is_pressed('a'):                            # function works according to terminal, but not sure on how to test with the games
+            pyautogui.press('left')
+            #print("left")
+        elif keyboard.is_pressed('d'):
+            pyautogui.press('right')
+            #print("right")
+        elif keyboard.is_pressed('s'):
+            pyautogui.press('down')
+            #print("down")
+        elif keyboard.is_pressed('w'):
+            pyautogui.press('up')
+            #print("up")
+    
 def trackpad_mouse():
     ''' 
     Control the game by moving the mouse/finger on trackpad left, right, up, or down. 
@@ -23,7 +35,12 @@ def trackpad_mouse():
 
     def on_move(x, y):
         # put your code here
+        #if last_position[0] == None and last_position[1] == None:
+            #last_position = (pyautogui.position())
+            
+            #print("None")
         pass
+        
         
 
     with mouse.Listener(on_move=on_move) as listener:
