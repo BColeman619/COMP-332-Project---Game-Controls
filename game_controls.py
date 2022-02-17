@@ -1,5 +1,4 @@
-from multiprocessing.dummy import current_process
-from cv2 import threshold
+from turtle import left
 import pyautogui
 
 last_position = (None, None)
@@ -38,9 +37,19 @@ def trackpad_mouse():
     '''
 
     from pynput import mouse
+    from pynput.mouse import Controller  # Added for reading pointer
+    mouse_pos = Controller()
 
     def on_move(x, y):
         global last_position
+        global last_dir
+
+        up_threshold = (1360, 820)
+        down_threshold = (1315, 972)
+        left_threshold = (1119, 820)
+        right_threshold = (1405, 826)
+        x_pos_dis = 0
+        y_pos_dis = 0
 
         if not all(last_position):  # Check if tuple has any 'None' value
             # Set x and y values in last_position to the current location
@@ -48,28 +57,27 @@ def trackpad_mouse():
         else:
             # find the difference between the old x & y positions
             # ie zip( Last position, Current Position)
-            current_location = (1,2)
-            difference = tuple(x-y for x, y in zip(last_position, current_location))
+            current_location = mouse_pos.position  # Read pointer position
+            difference = tuple(
+                x-y for x, y in zip(last_position, current_location))
             x_pos_dis = difference[0]
             y_pos_dis = difference[1]
-            print(x_pos_dis)
-            print(y_pos_dis)
 
-            # left_threshold = (1119, 820)
-            # up_threshold = (1360, 820)
-            # right_threshold = (1405, 826)
-            # down_threshold = (1315, 972)
+        if x_pos_dis > left_threshold[0] or y_pos_dis > up_threshold[1]:
+            last_dir = x_pos_dis
+        # Mouse movement; negative or positive
 
-            # # Read Pointer Position
-            # print("Current pointer position {0}".format(mouse.position))
-            # # Set Pointer position
-            # mouse.position = (10, 15)
-            # print("Current pointer position now at {0}".format(mouse.position))
-            # # Move Mouse Pointer relative to current position
-            # mouse.move(5, -5)
-
-        # print("None")
-        # pass
+        if current_location[0] > 0 and x_pos_dis < 0:
+            # pyautogui.press('left')
+            print("left")
+        elif current_location[0] > 0 and current_location[1] > 0:
+            # pyautogui.press('right')
+            print("right")
+        elif current_location[0] > 0 and current_location[1] > 0:
+            # pyautogui.press('down')
+            print("down")
+        elif current_location[0] > 0 and current_location[1] > 0:
+            # pyautogui.press('up')
 
     with mouse.Listener(on_move=on_move) as listener:
         listener.join()
