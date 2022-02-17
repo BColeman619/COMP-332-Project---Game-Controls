@@ -1,3 +1,5 @@
+from multiprocessing.dummy import current_process
+from cv2 import threshold
 import pyautogui
 
 last_position = (None, None)
@@ -27,6 +29,7 @@ def keypress():
         elif keyboard.is_pressed('w'):
             pyautogui.press('up')
             # print("up")----- Testing
+# End keypress()------------------------------------------------------------ #
 
 
 def trackpad_mouse():
@@ -37,28 +40,36 @@ def trackpad_mouse():
     from pynput import mouse
 
     def on_move(x, y):
-        # put your code here
-        # if last_position[0] == None and last_position[1] == None:
-        #last_position = (pyautogui.position())
+        global last_position
 
         if not all(last_position):  # Check if tuple has any 'None' value
             # Set x and y values in last_position to the current location
-            last_position(x, y)
+            last_position = (x, y)
         else:
             # find the difference between the old x & y positions
-            difference = tuple(
-                x-y for x, y in zip(last_position,  last_position(x, y)))
-
+            # ie zip( Last position, Current Position)
+            current_location = (1,2)
+            difference = tuple(x-y for x, y in zip(last_position, current_location))
             x_pos_dis = difference[0]
             y_pos_dis = difference[1]
-            """ TODO
-            THIS IS NEXT THE TOP SHOULD WORK
-            Given that there will always be some small movement with your hand when you are holding still, you need to check to see if the absolute differences are greater than some threshold. You should choose this threshold by trying out different numbers and see what works for your group. Only if the x difference or y difference is greater than the threshold should you try to use it for a direction. We use this threshold to prevent trying to move left 30 times for a single movement. Instead we only update our direction and position if we have moved far enough.
-            
-             """
+            print(x_pos_dis)
+            print(y_pos_dis)
+
+            # left_threshold = (1119, 820)
+            # up_threshold = (1360, 820)
+            # right_threshold = (1405, 826)
+            # down_threshold = (1315, 972)
+
+            # # Read Pointer Position
+            # print("Current pointer position {0}".format(mouse.position))
+            # # Set Pointer position
+            # mouse.position = (10, 15)
+            # print("Current pointer position now at {0}".format(mouse.position))
+            # # Move Mouse Pointer relative to current position
+            # mouse.move(5, -5)
 
         # print("None")
-        pass
+        # pass
 
     with mouse.Listener(on_move=on_move) as listener:
         listener.join()
@@ -96,6 +107,7 @@ def color_tracker():
     while True:
         # your code here
         continue
+# End color_tracker()------------------------------------------------------- #
 
 
 def finger_tracking():
@@ -112,11 +124,13 @@ def finger_tracking():
     vs = mw.WebcamVideoStream().start()
 
     # put your code here
+# End finger_tracking()----------------------------------------------------- #
 
 
 def unique_control():
     # put your code here
     pass
+# End unique_control()------------------------------------------------------ #
 
 
 def main():
@@ -135,3 +149,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+# End main()---------------------------------------------------------------- #
