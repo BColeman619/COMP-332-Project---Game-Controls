@@ -1,4 +1,3 @@
-from turtle import left
 import pyautogui
 
 last_position = (None, None)
@@ -43,11 +42,17 @@ def trackpad_mouse():
     def on_move(x, y):
         global last_position
         global last_dir
+        # Read pointer position
+        print('The current pointer position is {0}'.format(mouse_pos.position))
 
-        up_threshold = (1360, 820)
-        down_threshold = (1315, 972)
-        left_threshold = (1119, 820)
-        right_threshold = (1405, 826)
+        up_threshold = (5, 5)
+        down_threshold = (5, 5)
+        left_threshold = (5, 5)
+        right_threshold = (5, 5)
+        # up_threshold = (1360, 820)
+        # down_threshold = (1315, 972)
+        # left_threshold = (1119, 820)
+        # right_threshold = (1405, 826)
         x_pos_dis = 0
         y_pos_dis = 0
 
@@ -63,21 +68,31 @@ def trackpad_mouse():
             x_pos_dis = difference[0]
             y_pos_dis = difference[1]
 
-        if x_pos_dis > left_threshold[0] or y_pos_dis > up_threshold[1]:
-            last_dir = x_pos_dis
+        if (x_pos_dis > left_threshold[0]):
+            if x_pos_dis < 0 and last_dir != "left":
+                pyautogui.press('left')
+                # print("left")
+                last_dir = "left"
+                last_position = (x, y)
+        if (y_pos_dis > up_threshold[1]):
+            if y_pos_dis < 0 and last_dir != "up":
+                pyautogui.press('up')
+                # print("up")
+                last_dir = "up"
+                last_position = (x, y)
+        if (x_pos_dis > right_threshold[0]):
+            if x_pos_dis > 0 and last_dir != "right":
+                pyautogui.press('right')
+                # print("right")
+                last_dir = "right"
+                last_position = (x, y)
+        if (y_pos_dis > down_threshold[1]):
+            if y_pos_dis > 0 and last_dir != "down":
+                pyautogui.press('down')
+                # print("down")
+                last_dir = "down"
+                last_position = (x, y)
         # Mouse movement; negative or positive
-
-        if current_location[0] > 0 and x_pos_dis < 0:
-            # pyautogui.press('left')
-            print("left")
-        elif current_location[0] > 0 and current_location[1] > 0:
-            # pyautogui.press('right')
-            print("right")
-        elif current_location[0] > 0 and current_location[1] > 0:
-            # pyautogui.press('down')
-            print("down")
-        elif current_location[0] > 0 and current_location[1] > 0:
-            # pyautogui.press('up')
 
     with mouse.Listener(on_move=on_move) as listener:
         listener.join()
