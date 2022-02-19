@@ -14,19 +14,15 @@ def keypress():
 
     # put your code here
     while True:
-        # function works according to terminal, but not sure on how to test with the games
+        
         if keyboard.is_pressed('a'):
             pyautogui.press('left')
-            # print("left")----- Testing
         elif keyboard.is_pressed('d'):
             pyautogui.press('right')
-            # print("right")----- Testing
         elif keyboard.is_pressed('s'):
             pyautogui.press('down')
-            # print("down")----- Testing
         elif keyboard.is_pressed('w'):
             pyautogui.press('up')
-            # print("up")----- Testing
 # End keypress()------------------------------------------------------------ #
 
 
@@ -43,16 +39,16 @@ def trackpad_mouse():
         global last_position
         global last_dir
         # Read pointer position
-        print('The current pointer position is {0}'.format(mouse_pos.position))
+        # while True:
+        #     print('The current pointer position is {0}'.format(mouse_pos.position))
 
-        up_threshold = (5, 5)
-        down_threshold = (5, 5)
-        left_threshold = (5, 5)
-        right_threshold = (5, 5)
-        # up_threshold = (1360, 820)
-        # down_threshold = (1315, 972)
-        # left_threshold = (1119, 820)
-        # right_threshold = (1405, 826)
+        # num_threshold = (2150, 1400)
+        up_threshold = (1360, 820)
+        down_threshold = (1315, 972)
+        left_threshold = (1119, 820)
+        right_threshold = (1405, 826)
+        
+        difference = ()
         x_pos_dis = 0
         y_pos_dis = 0
 
@@ -63,36 +59,69 @@ def trackpad_mouse():
             # find the difference between the old x & y positions
             # ie zip( Last position, Current Position)
             current_location = mouse_pos.position  # Read pointer position
-            difference = tuple(
-                x-y for x, y in zip(last_position, current_location))
+            difference = tuple(map(abs, tuple(
+                x-y for x, y in zip(last_position, current_location))))
+
             x_pos_dis = difference[0]
             y_pos_dis = difference[1]
 
-        if (x_pos_dis > left_threshold[0]):
-            if x_pos_dis < 0 and last_dir != "left":
+        # Left Threshold
+        if (x_pos_dis > left_threshold[0] or y_pos_dis > left_threshold[1]):
+            if (x_pos_dis > y_pos_dis and last_dir != "left"):
                 pyautogui.press('left')
-                # print("left")
+                print("left")
                 last_dir = "left"
                 last_position = (x, y)
-        if (y_pos_dis > up_threshold[1]):
-            if y_pos_dis < 0 and last_dir != "up":
-                pyautogui.press('up')
-                # print("up")
-                last_dir = "up"
-                last_position = (x, y)
-        if (x_pos_dis > right_threshold[0]):
-            if x_pos_dis > 0 and last_dir != "right":
+
+        if (x_pos_dis > right_threshold[0] or y_pos_dis > right_threshold[1]):
+            if (x_pos_dis > y_pos_dis and last_dir != "right"):
                 pyautogui.press('right')
-                # print("right")
+                print("right")
                 last_dir = "right"
                 last_position = (x, y)
-        if (y_pos_dis > down_threshold[1]):
-            if y_pos_dis > 0 and last_dir != "down":
+        
+        if (x_pos_dis > up_threshold[0] or y_pos_dis > up_threshold[1]):
+            if (x_pos_dis > y_pos_dis and last_dir != "up"):
+                pyautogui.press('up')
+                print("up")
+                last_dir = "up"
+                last_position = (x, y)
+        
+        if (x_pos_dis > down_threshold[0] or y_pos_dis > down_threshold[1]):
+            if (x_pos_dis > y_pos_dis and last_dir != "down"):
                 pyautogui.press('down')
-                # print("down")
+                print("down")
                 last_dir = "down"
                 last_position = (x, y)
-        # Mouse movement; negative or positive
+
+                
+
+
+
+
+        #         if last_dir != "left":
+        #             # pyautogui.press('left')
+        #             print("left")
+        # elif (difference > num_threshold):
+        #     if x_pos_dis > y_pos_dis:
+        #         if last_dir != "up":
+        #             print("up")
+        #             last_dir = "up"
+        #             last_position = (x, y)
+        # elif (difference > num_threshold):
+        #     if x_pos_dis > y_pos_dis:
+        #         if last_dir != "right":
+        #             # pyautogui.press('right')
+        #             print("right")
+        #             last_dir = "right"
+        #             last_position = (x, y)
+        # elif (difference > do num_threshold):
+        #     if x_pos_dis > y_pos_dis:
+        #         if last_dir != "down":
+        #             # pyautogui.press('down')
+        #             print("down")
+        #             last_dir = "down"
+        #             last_position = (x, y)
 
     with mouse.Listener(on_move=on_move) as listener:
         listener.join()
@@ -129,6 +158,10 @@ def color_tracker():
 
     while True:
         # your code here
+        #You will first get the frame by reading the frame from the video stream:
+        vs.read()
+
+        
         continue
 # End color_tracker()------------------------------------------------------- #
 
@@ -173,3 +206,7 @@ def main():
 if __name__ == '__main__':
     main()
 # End main()---------------------------------------------------------------- #
+# x_pos_dis < 0 and
+# y_pos_dis < 0 and
+# x_pos_dis > 0 and
+# y_pos_dis > 0 and
