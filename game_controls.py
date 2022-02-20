@@ -184,8 +184,33 @@ def finger_tracking():
 
 
 def unique_control():
-    # put your code here
-    pass
+    import speech_recognition as sr
+    
+    r = sr.Recognizer()
+    
+    while True:
+        with sr.Microphone() as source:
+            audio = r.listen(source)
+            try:
+                text = r.recognize_google(audio)
+            except:
+                print('Did not get that try Again')
+                text = ''
+            if text == "go up":
+                pyautogui.press('up')
+                #print(text)
+            elif text == "go down":
+                pyautogui.press('down')
+                #print(text)
+            elif text == "go left":
+                pyautogui.press('left')
+               #print(text)
+            elif text == "go right":
+                pyautogui.press('right')
+                #print(text)
+
+
+
 # End unique_control()------------------------------------------------------ #
 
 
