@@ -9,12 +9,10 @@ def keypress():
     Choose any four keys that a user can press to control the game.
     Update this doc string with your choices. 
     '''
-
     import keyboard
 
     # put your code here
     while True:
-        
         if keyboard.is_pressed('a'):
             pyautogui.press('left')
         elif keyboard.is_pressed('d'):
@@ -47,7 +45,7 @@ def trackpad_mouse():
         down_threshold = (1315, 972)
         left_threshold = (1119, 820)
         right_threshold = (1405, 826)
-        
+
         difference = ()
         x_pos_dis = 0
         y_pos_dis = 0
@@ -79,25 +77,20 @@ def trackpad_mouse():
                 print("right")
                 last_dir = "right"
                 last_position = (x, y)
-        
+
         if (x_pos_dis > up_threshold[0] or y_pos_dis > up_threshold[1]):
             if (x_pos_dis > y_pos_dis and last_dir != "up"):
                 pyautogui.press('up')
                 print("up")
                 last_dir = "up"
                 last_position = (x, y)
-        
+
         if (x_pos_dis > down_threshold[0] or y_pos_dis > down_threshold[1]):
             if (x_pos_dis > y_pos_dis and last_dir != "down"):
                 pyautogui.press('down')
                 print("down")
                 last_dir = "down"
                 last_position = (x, y)
-
-                
-
-
-
 
         #         if last_dir != "left":
         #             # pyautogui.press('left')
@@ -138,8 +131,8 @@ def color_tracker():
     import multithreaded_webcam as mw
 
     # You need to define HSV colour range MAKE CHANGE HERE
-    colorLower = (29,86,6) # Greenish
-    colorUpper = (156, 162,53) # Goldish - #9ca235
+    colorLower = (29, 86, 6)  # Greenish - #1d5606
+    colorUpper = (156, 162, 53)  # Goldish - #9ca235
 
     # set the limit for the number of frames to store and the number that have seen direction change
     buffer = 20
@@ -158,31 +151,32 @@ def color_tracker():
 
     while True:
         frame = vs.read()
-        frame = cv2.flip(frame,1)
-
-        frame = imutils.resize(frame, width = 600)
-        image = cv2.GaussianBlur(frame, (5,5), 0)
-        image = cv2.cvtColor(frame,cv2.COLOR_BGRHSV)
+        frame = cv2.flip(frame, 1)
+        # TODO: Maybe the parameters need to be changed.
+        frame = imutils.resize(frame, width=600)
+        image = cv2.GaussianBlur(frame, (5, 5), 0)
+        HSV = cv2.cvtColor(frame, cv2.COLOR_BGRHSV)
 
         mask_green = cv2.inRange(frame, colorLower, colorUpper)
         mask_gold = cv2.inRange(frame, colorLower, colorUpper)
 
-        mask_green = cv2.erode(mask_green , None, iterations = 2)
-        mask_gold = cv2.erode(mask_gold , None, iterations = 2)
-        
-        mask_green = cv2.dilate(mask_green, None, iterations = 2)
-        mask_gold = cv2.dilate(mask_gold, None, iterations = 2)
+        mask_green = cv2.erode(mask_green, None, iterations=2)
+        mask_gold = cv2.erode(mask_gold, None, iterations=2)
 
-        # points clear, you need to make a list of all of them. You can do this by finding the contours
-        contours = cv2.findContours(mask_green.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
-        
+        mask_green = cv2.dilate(mask_green, None, iterations=2)
+        mask_gold = cv2.dilate(mask_gold, None, iterations=2)
+
+        # List of all of pts. Function will return a tuple or two items. We will only need the first:
+        contours = cv2.findContours(
+            mask_green.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
+        # Center of our object to find its location
         center = None
 
         # This next part we will only do if we found any contours (the list returned is greater than 0).
-
         if len(contours) > 0:
-            largest_contour = max(contours, key = cv2.contourArea)
-            radius = cv2.minEnclosingCircle(largest_contour)[-2] # check!!! this shit 
+            largest_contour = max(contours, key=cv2.contourArea)
+            radius = cv2.minEnclosingCircle(
+                largest_contour)[-2]  # check!!! this shit
             # ((x, y), radius) = cv2.minEnclosingCircle(largest_contour)# keep until sure
             M = cv2.moments(largest_contour)
             center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))
@@ -190,28 +184,14 @@ def color_tracker():
             if radius > 10:
                 pts.appendleft(center)
 
-        # Next, we will find the direction. We will only find the direction if we 
-        # have seen at least 10frames (`num_frames`) and there are at least 10 contours in `pts'
+        # Next, we will find the direction. We will only find the direction if we have seen at least 10frames (`num_frames`) and there are at least 10 contours in `pts'
+        # TODO - Here Cameron
         if num_frames >= 10 and len(pts) >= 10:
-            difference = tuple(map(abs, tuple(
-                    x-y for x, y in zip(pts[1], pts[10]))))
-
-
-
-
-
-
-            
-
-
-
-        
-
+            difference = pts[10] - pts[0]
 
         continue
 
 
- 
 # End color_tracker()------------------------------------------------------- #
 
 
@@ -228,21 +208,20 @@ def finger_tracking():
     # Start video capture
     vs = mw.WebcamVideoStream().start()
     #print("Webcam is ON")
-    #vs.stream.release()
-   
+    # vs.stream.release()
+
     # put your code here
 
-   
 
 # End finger_tracking()----------------------------------------------------- #
 
 
 def unique_control():
     import speech_recognition as sr
-    #need to install speechreconition
-    
+    # need to install speechreconition
+
     r = sr.Recognizer()
-    
+
     while True:
         with sr.Microphone() as source:
             audio = r.listen(source)
@@ -253,18 +232,16 @@ def unique_control():
                 text = ''
             if text == "go up":
                 pyautogui.press('up')
-                #print(text)
+                # print(text)
             elif text == "go down":
                 pyautogui.press('down')
-                #print(text)
+                # print(text)
             elif text == "go left":
                 pyautogui.press('left')
-                #print(text)
+                # print(text)
             elif text == "go right":
                 pyautogui.press('right')
-                #print(text)
-
-
+                # print(text)
 
 # End unique_control()------------------------------------------------------ #
 
@@ -286,7 +263,3 @@ def main():
 if __name__ == '__main__':
     main()
 # End main()---------------------------------------------------------------- #
-# x_pos_dis < 0 and
-# y_pos_dis < 0 and
-# x_pos_dis > 0 and
-# y_pos_dis > 0 and
