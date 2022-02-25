@@ -138,8 +138,8 @@ def color_tracker():
     import multithreaded_webcam as mw
 
     # You need to define HSV colour range MAKE CHANGE HERE
-    colorLower = None
-    colorUpper = None
+    colorLower = (29,86,6) # Greenish
+    colorUpper = (156, 162,53) # Goldish - #9ca235
 
     # set the limit for the number of frames to store and the number that have seen direction change
     buffer = 20
@@ -157,12 +157,61 @@ def color_tracker():
     vs = mw.WebcamVideoStream().start()
 
     while True:
-        # your code here
-        #You will first get the frame by reading the frame from the video stream:
-        vs.read()
+        frame = vs.read()
+        frame = cv2.flip(frame,1)
+
+        frame = imutils.resize(frame, width = 600)
+        image = cv2.GaussianBlur(frame, (5,5), 0)
+        image = cv2.cvtColor(frame,cv2.COLOR_BGRHSV)
+
+        mask_green = cv2.inRange(frame, colorLower, colorUpper)
+        mask_gold = cv2.inRange(frame, colorLower, colorUpper)
+
+        mask_green = cv2.erode(mask_green , None, iterations = 2)
+        mask_gold = cv2.erode(mask_gold , None, iterations = 2)
+        
+        mask_green = cv2.dilate(mask_green, None, iterations = 2)
+        mask_gold = cv2.dilate(mask_gold, None, iterations = 2)
+
+        # points clear, you need to make a list of all of them. You can do this by finding the contours
+        contours = cv2.findContours(mask_green.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
+        
+        center = None
+
+        # This next part we will only do if we found any contours (the list returned is greater than 0).
+
+        if len(contours) > 0:
+            largest_contour = max(contours, key = cv2.contourArea)
+            radius = cv2.minEnclosingCircle(largest_contour)[-2] # check!!! this shit 
+            # ((x, y), radius) = cv2.minEnclosingCircle(largest_contour)# keep until sure
+            M = cv2.moments(largest_contour)
+            center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))
+
+            if radius > 10:
+                pts.appendleft(center)
+
+        # Next, we will find the direction. We will only find the direction if we 
+        # have seen at least 10frames (`num_frames`) and there are at least 10 contours in `pts'
+        if num_frames >= 10 and len(pts) >= 10:
+            difference = tuple(map(abs, tuple(
+                    x-y for x, y in zip(pts[1], pts[10]))))
+
+
+
+
+
+
+            
+
+
 
         
+
+
         continue
+
+
+ 
 # End color_tracker()------------------------------------------------------- #
 
 
@@ -178,13 +227,19 @@ def finger_tracking():
     time.sleep(2)
     # Start video capture
     vs = mw.WebcamVideoStream().start()
-
+    #print("Webcam is ON")
+    #vs.stream.release()
+   
     # put your code here
+
+   
+
 # End finger_tracking()----------------------------------------------------- #
 
 
 def unique_control():
     import speech_recognition as sr
+    #need to install speechreconition
     
     r = sr.Recognizer()
     
@@ -204,7 +259,7 @@ def unique_control():
                 #print(text)
             elif text == "go left":
                 pyautogui.press('left')
-               #print(text)
+                #print(text)
             elif text == "go right":
                 pyautogui.press('right')
                 #print(text)
