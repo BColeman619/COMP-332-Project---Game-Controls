@@ -105,35 +105,36 @@ def color_tracker():
     # Sleep for 2 seconds to let camera initialize properly
     time.sleep(2)
     # Start video capture
-    wc = cv2.VideoCapture(0)
+    wc = cv2.VideoCapture(0)# Some changes--for our PC
 
     while True:
 
-        frame = wc.read()
+        _,frame = wc.read()
         frame = cv2.flip(frame, 1)
         # TODO: Maybe the parameters need to be changed.
         frame = imutils.resize(frame, width=600)
         image = cv2.GaussianBlur(frame, (5, 5), 0)
-        HSVframe = cv2.cvtColor(image, cv2.COLOR_BGRHSV)
+        HSVframe = cv2.cvtColor(image, cv2.COLOR_BGR2HSV) 
 
-        #masking upper/lower bound
+        # masking upper/lower bound
         mask_green = cv2.inRange(HSVframe, colorLower, colorUpper)
         mask_gold = cv2.inRange(HSVframe, colorLower, colorUpper)
 
-        #erode the mask
+        # erode the mask
         mask_green = cv2.erode(mask_green, None, iterations=2)
         mask_gold = cv2.erode(mask_gold, None, iterations=2)
 
-        #dilate the mask
+        # dilate the mask
         mask_green = cv2.dilate(mask_green, None, iterations=2)
         mask_gold = cv2.dilate(mask_gold, None, iterations=2)
 
-        res_green = cv2.bitwise_and(frame, frame, mask = mask_green)
-        red_gold = cv2.bitwise_and(frame, frame, mask = mask_gold)
+        res_green = cv2.bitwise_and(frame, frame, mask=mask_green)
+        res_gold = cv2.bitwise_and(frame, frame, mask=mask_gold)
 
         # List of all of pts. Function will return a tuple or two items. We will only need the first:
-        #contour to track green color
-        contours,not_needed = cv2.findContours(mask_green.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # contour to track green color
+        contours, not_needed = cv2.findContours(
+            mask_green.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         # Center of our object to find its location
         center = None
 
@@ -141,12 +142,12 @@ def color_tracker():
             area = cv2.contourArea(contour)
             if(area > 300):
                 x, y, w, h = cv2.boundingRect(contour)
-                imageFrame = cv2.rectangle(imageFrame, (x, y), 
-                                        (x + w, y + h),
-                                        (0, 255, 0), 2)
-                
-                cv2.putText(imageFrame, "Green Colour", (x, y),
-                            cv2.FONT_HERSHEY_SIMPLEX, 
+                frame = cv2.rectangle(frame, (x, y),
+                                           (x + w, y + h),
+                                           (0, 255, 0), 2)
+
+                cv2.putText(frame, "Green Colour", (x, y),
+                            cv2.FONT_HERSHEY_SIMPLEX,
                             1.0, (0, 255, 0))
 
         # This next part we will only do if we found any contours (the list returned is greater than 0).
@@ -179,12 +180,12 @@ def finger_tracking():
     import mediapipe as mp
 
     cap = cv2.VideoCapture(0)
-    #TODO: change this and am
+    # TODO: change this and am
     mpHands = mp.solutions.hands
     hands = mpHands.Hands(static_image_mode=False,
-                      max_num_hands=2,
-                      min_detection_confidence=0.5,
-                      min_tracking_confidence=0.5)
+                          max_num_hands=2,
+                          min_detection_confidence=0.5,
+                          min_tracking_confidence=0.5)
     mpDraw = mp.solutions.drawing_utils
 
     pTime = 0
@@ -194,32 +195,31 @@ def finger_tracking():
         success, img = cap.read()
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         results = hands.process(imgRGB)
-    #print(results.multi_hand_landmarks)
+    # print(results.multi_hand_landmarks)
 
         if results.multi_hand_landmarks:
             for handLms in results.multi_hand_landmarks:
                 for id, lm in enumerate(handLms.landmark):
-                    print(id,lm)
+                    print(id, lm)
                     h, w, c = img.shape
-                    cx, cy = int(lm.x *w), int(lm.y*h)
-                    #if id ==0:
-                    cv2.circle(img, (cx,cy), 3, (255,0,255), cv2.FILLED)
+                    cx, cy = int(lm.x * w), int(lm.y*h)
+                    # if id ==0:
+                    cv2.circle(img, (cx, cy), 3, (255, 0, 255), cv2.FILLED)
 
                 mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
 
                 #Thumb: landmarkList[4][1] < landmarkList[3][1]
-                #Index finger: landmarkList[8][2] < landmarkList[6][2]
-                #Middle finger: landmarkList[12][2] < landmarkList[10][2]
-                #Ring finger: landmarkList[16][2] < landmarkList[14][2]
-                #Little finger: landmarkList[20][2] < landmarkList[18][2]
-
-
+                # Index finger: landmarkList[8][2] < landmarkList[6][2]
+                # Middle finger: landmarkList[12][2] < landmarkList[10][2]
+                # Ring finger: landmarkList[16][2] < landmarkList[14][2]
+                # Little finger: landmarkList[20][2] < landmarkList[18][2]
 
         cTime = time.time()
         fps = 1/(cTime-pTime)
         pTime = cTime
 
-        cv2.putText(img,str(int(fps)), (10,70), cv2.FONT_HERSHEY_PLAIN, 3, (255,0,255), 3)
+        cv2.putText(img, str(int(fps)), (10, 70),
+                    cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 3)
 
         cv2.imshow("Image", img)
         cv2.waitKey(1)
