@@ -89,8 +89,8 @@ def color_tracker():
     import multithreaded_webcam as mw
 
     # You need to define HSV colour range MAKE CHANGE HERE
-    colorLower = np.array([29, 86, 6])  # Greenish - #1d5606
-    colorUpper = np.array([156, 162, 53])  # Goldish - #9ca235
+    colorLower = (29, 86, 6)  # Greenish - #1d5606
+    colorUpper = (156, 162, 53)  # Goldish - #9ca235
 
     # set the limit for the number of frames to store and the number that have seen direction change
     buffer = 20
@@ -105,67 +105,49 @@ def color_tracker():
     # Sleep for 2 seconds to let camera initialize properly
     time.sleep(2)
     # Start video capture
-    wc = cv2.VideoCapture(0)# Some changes--for our PC
+    vs = mw.WebcamVideoStream().start()
 
     while True:
-
-        _,frame = wc.read()
+        frame = vs.read()
         frame = cv2.flip(frame, 1)
         # TODO: Maybe the parameters need to be changed.
         frame = imutils.resize(frame, width=600)
         image = cv2.GaussianBlur(frame, (5, 5), 0)
-        HSVframe = cv2.cvtColor(image, cv2.COLOR_BGR2HSV) 
+        HSV = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        # masking upper/lower bound
-        mask_green = cv2.inRange(HSVframe, colorLower, colorUpper)
-        mask_gold = cv2.inRange(HSVframe, colorLower, colorUpper)
+        mask_green = cv2.inRange(frame, colorLower, colorUpper)
+        mask_gold = cv2.inRange(frame, colorLower, colorUpper)
 
-        # erode the mask
         mask_green = cv2.erode(mask_green, None, iterations=2)
         mask_gold = cv2.erode(mask_gold, None, iterations=2)
 
-        # dilate the mask
         mask_green = cv2.dilate(mask_green, None, iterations=2)
         mask_gold = cv2.dilate(mask_gold, None, iterations=2)
 
-        res_green = cv2.bitwise_and(frame, frame, mask=mask_green)
-        res_gold = cv2.bitwise_and(frame, frame, mask=mask_gold)
-
         # List of all of pts. Function will return a tuple or two items. We will only need the first:
-        # contour to track green color
-        contours, not_needed = cv2.findContours(
-            mask_green.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours = cv2.findContours(
+            mask_green.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
         # Center of our object to find its location
         center = None
 
-        for pic, contour in enumerate(contours):
-            area = cv2.contourArea(contour)
-            if(area > 300):
-                x, y, w, h = cv2.boundingRect(contour)
-                frame = cv2.rectangle(frame, (x, y),
-                                           (x + w, y + h),
-                                           (0, 255, 0), 2)
-
-                cv2.putText(frame, "Green Colour", (x, y),
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            1.0, (0, 255, 0))
-
         # This next part we will only do if we found any contours (the list returned is greater than 0).
-        # if len(contours) > 0:
-        #     largest_contour = max(contours, key=cv2.contourArea)
-        #     radius = cv2.minEnclosingCircle(
-        #         largest_contour)[-2]  # check!!! this shit
-        #     # ((x, y), radius) = cv2.minEnclosingCircle(largest_contour)# keep until sure
-        #     M = cv2.moments(largest_contour)
-        #     center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))
+        if len(contours) > 0:
+            largest_contour = max(contours, key=cv2.contourArea)
+            radius = cv2.minEnclosingCircle(
+                largest_contour)[-2]  # check!!! this shit
+            # ((x, y), radius) = cv2.minEnclosingCircle(largest_contour)# keep until sure
+            M = cv2.moments(largest_contour)
+            center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))
 
-        #     if radius > 10:
-        #         pts.appendleft(center)
+            if radius > 10:
+                pts.appendleft(center)
 
-        # # Next, we will find the direction. We will only find the direction if we have seen at least 10frames (`num_frames`) and there are at least 10 contours in `pts'
-        # # TODO - Here Cameron
-        # if num_frames >= 10 and len(pts) >= 10:
-        #     difference = pts[10] - pts[0]
+        # Next, we will find the direction. We will only find the direction if we have seen at least 10frames (`num_frames`) and there are at least 10 contours in `pts'
+        # TODO - Here Cameron
+        if num_frames >= 10 and len(pts) >= 10:
+            difference = pts[10] - pts[0]
+
+        continue
 
 
 # End color_tracker()------------------------------------------------------- #
