@@ -81,91 +81,120 @@ def trackpad_mouse():
 
 
 def color_tracker():
+    # --------------------------------- #
     import cv2
     import imutils
     import numpy as np
     from collections import deque
     import time
     import multithreaded_webcam as mw
+    # --------------------------------- #
 
     # You need to define HSV colour range MAKE CHANGE HERE
-    colorLower = np.array([29, 86, 6])  # Greenish - #1d5606
-    colorUpper = np.array([156, 162, 53])  # Goldish - #9ca235
+    colorLower = (29, 86, 6)  # Redish - #ff4067
+    colorUpper = (64, 255, 255)  # Pinkish - #ff40ab
 
-    # set the limit for the number of frames to store and the number that have seen direction change
+    # Set the limit for the number of frames to store and the number that have seen direction change
     buffer = 20
     pts = deque(maxlen=buffer)
 
-    # store the direction and number of frames with direction change
+    # Store the direction and number of frames with direction change
     num_frames = 0
     (dX, dY) = (0, 0)
     direction = ''
     global last_dir
 
+    num_threshold = (100, 100)  # Threshold for direction
+
     # Sleep for 2 seconds to let camera initialize properly
     time.sleep(2)
     # Start video capture
-    wc = cv2.VideoCapture(0)
+    video_stream = mw.WebcamVideoStream().start()
+    # video_stream = cv2.VideoCapture(0) import the crap
 
     while True:
-
-        frame = wc.read()
+        # Reading the frame from the video stream
+        frame = video_stream.read()
+        # Using that frame, you will flip it
         frame = cv2.flip(frame, 1)
-        # TODO: Maybe the parameters need to be changed.
+        # You will then resize the frame
         frame = imutils.resize(frame, width=600)
-        image = cv2.GaussianBlur(frame, (5, 5), 0)
-        HSVframe = cv2.cvtColor(image, cv2.COLOR_BGRHSV)
+        # You then want to blur the image the reduce the noise in it
+        frame = cv2.GaussianBlur(frame, (5, 5), 0)
+        # Finally, you need to convert the colors to HSV:
+        hsv_format = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        #masking upper/lower bound
-        mask_green = cv2.inRange(HSVframe, colorLower, colorUpper)
-        mask_gold = cv2.inRange(HSVframe, colorLower, colorUpper)
+        redish_mask = cv2.inRange(hsv_format, colorLower, colorUpper)
+        redish_mask = cv2.erode(redish_mask, None, iterations=2)
+        redish_mask = cv2.dilate(redish_mask, None, iterations=2)
 
-        #erode the mask
-        mask_green = cv2.erode(mask_green, None, iterations=2)
-        mask_gold = cv2.erode(mask_gold, None, iterations=2)
+        # Finding the contours; Function will return a tuple or two items. We will only need the first:
+        contours,extra = cv2.findContours(redish_mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
 
-        #dilate the mask
-        mask_green = cv2.dilate(mask_green, None, iterations=2)
-        mask_gold = cv2.dilate(mask_gold, None, iterations=2)
-
-        res_green = cv2.bitwise_and(frame, frame, mask = mask_green)
-        red_gold = cv2.bitwise_and(frame, frame, mask = mask_gold)
-
-        # List of all of pts. Function will return a tuple or two items. We will only need the first:
-        #contour to track green color
-        contours,not_needed = cv2.findContours(mask_green.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        # Center of our object to find its location
+        # Track the center
         center = None
 
-        for pic, contour in enumerate(contours):
-            area = cv2.contourArea(contour)
-            if(area > 300):
-                x, y, w, h = cv2.boundingRect(contour)
-                imageFrame = cv2.rectangle(imageFrame, (x, y), 
-                                        (x + w, y + h),
-                                        (0, 255, 0), 2)
-                
-                cv2.putText(imageFrame, "Green Colour", (x, y),
-                            cv2.FONT_HERSHEY_SIMPLEX, 
-                            1.0, (0, 255, 0))
+        # If we found any contours; if > 0:
 
-        # This next part we will only do if we found any contours (the list returned is greater than 0).
-        # if len(contours) > 0:
-        #     largest_contour = max(contours, key=cv2.contourArea)
-        #     radius = cv2.minEnclosingCircle(
-        #         largest_contour)[-2]  # check!!! this shit
-        #     # ((x, y), radius) = cv2.minEnclosingCircle(largest_contour)# keep until sure
-        #     M = cv2.moments(largest_contour)
-        #     center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))
+        if(len(contours) > 0):
+            largest_contour = max(contours, key=cv2.contourArea)
+            # Returns a tuple-the radius, the second of the tuple values:
+            radius = cv2.minEnclosingCircle(largest_contour)[1]
 
-        #     if radius > 10:
-        #         pts.appendleft(center)
+            M = cv2.moments(largest_contour)
+            center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))
 
-        # # Next, we will find the direction. We will only find the direction if we have seen at least 10frames (`num_frames`) and there are at least 10 contours in `pts'
-        # # TODO - Here Cameron
-        # if num_frames >= 10 and len(pts) >= 10:
-        #     difference = pts[10] - pts[0]
+            # Only if the radius is larger than 10; add the center
+            if radius > 10:
+                pts.appendleft(center)
 
+        if num_frames >= 10 and len(pts) >= 10:
+            # In `dX` and `dY`, store the difference between the x and y values
+            x_diff = pts[9][0] - pts[0][0]  # 1st frame
+            y_diff = pts[9][1] - pts[0][1]  # 2nd frame
+            (dX, dY) = (x_diff, y_diff)
+         
+            cv2.putText(frame, direction, (20, 40),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
+
+        if (abs(dX) > num_threshold[0] or abs(dY) > num_threshold[1]):
+            #setting direction
+            if(abs(dX) > abs(dY)):
+                if ((dX < 0) and (last_dir != "right")):
+                    direction = "right"
+                elif ((dX > 0) and (last_dir != "left")):
+                    direction = "left"
+            # up and down
+            elif (abs(dX) < abs(dY)):
+                if ((dY < 0) and (last_dir != "down")):
+                    direction = "down"
+                elif ((dY > 0) and (last_dir != "up")):
+                    direction = "up"
+
+            #Show Direction
+            cv2.putText(frame, direction, (20,40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255),3)
+
+            if (direction == "left"):
+                last_dir = "left"
+                pyautogui.press("left")
+                print("left")
+            elif (direction == "right"):
+                last_dir = "right"
+                pyautogui.press("right")
+                print("right")
+            elif (direction == "up"):
+                last_dir = "up"
+                pyautogui.press("up")
+                print("up")
+            elif (direction == "down"):
+                last_dir = "down"
+                pyautogui.press("down")
+                print("down")
+
+        # Show the frame on screen
+        cv2.imshow('Game Control Window', frame)
+        cv2.waitKey(1)
+        num_frames += 1
 
 # End color_tracker()------------------------------------------------------- #
 
