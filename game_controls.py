@@ -108,10 +108,13 @@ def color_tracker():
     direction = ''
     global last_dir
 
+    num_threshold = (100, 100)  # Threshold for direction
+
     # Sleep for 2 seconds to let camera initialize properly
     time.sleep(2)
     # Start video capture
     video_stream = mw.WebcamVideoStream().start()
+    # video_stream = cv2.VideoCapture(0) import the crap
 
     while True:
         # Reading the frame from the video stream
@@ -131,7 +134,7 @@ def color_tracker():
 
         # Finding the contours; Function will return a tuple or two items. We will only need the first:
         contours = cv2.findContours(redish_mask.copy(), cv2.RETR_EXTERNAL,
-                                    cv2.CHAIN_APPROX_SIMPLE)[-2]
+                                    cv2.CHAIN_APPROX_SIMPLE)
 
         # Track the center
         center = None
@@ -151,9 +154,41 @@ def color_tracker():
 
         if num_frames >= 10 and len(pts) >= 10:
             # In `dX` and `dY`, store the difference between the x and y values
-            x_diff = (x - pts[0])  # 1st frame
-            y_diff = (y - pts[9])  # 2nd frame
+            x_diff = abs(x - pts[0])  # 1st frame
+            y_diff = abs(y - pts[9])  # 2nd frame
             (dX, dY) = (x_diff, y_diff)
+
+            cv2.putText(frame, direction, (20, 40),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
+
+            if (x_diff > num_threshold[0]):
+                if (last_dir != "left"):
+                    # pyautogui.press('left')
+                    print("left\n")  # Testing
+                    last_dir = "left"
+                    direction = "left"
+                else:
+                    # pyautogui.press('right')
+                    print("right\n")  # Testing
+                    last_dir = "right"
+                    direction = "right"
+
+            elif (y_diff > num_threshold[1]):
+                if (y_diff > 0 and last_dir != "up"):
+                    # pyautogui.press('up')
+                    print("up\n")  # Testing
+                    last_dir = "up"
+                    direction = "up"
+                else:
+                    # pyautogui.press('down')
+                    print("down\n")  # Testing
+                    last_dir = "down"
+                    direction = "down"
+
+        # Show the frame on screen
+        cv2.imshow('Game Control Window', frame)
+        cv2.waitKey(1)
+        num_frames += 1
 
         continue
 
