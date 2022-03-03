@@ -91,8 +91,8 @@ def color_tracker():
     # --------------------------------- #
 
     # You need to define HSV colour range MAKE CHANGE HERE
-    colorLower = (29, 86, 6)  # Redish - #ff4067
-    colorUpper = (64, 255, 255)  # Pinkish - #ff40ab
+    colorLower = (29, 86, 6)  # green 
+    colorUpper = (64, 255, 255)  #darkish green
 
     # Set the limit for the number of frames to store and the number that have seen direction change
     buffer = 20
@@ -124,12 +124,12 @@ def color_tracker():
         # Finally, you need to convert the colors to HSV:
         hsv_format = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        redish_mask = cv2.inRange(hsv_format, colorLower, colorUpper)
-        redish_mask = cv2.erode(redish_mask, None, iterations=2)
-        redish_mask = cv2.dilate(redish_mask, None, iterations=2)
+        green_mask = cv2.inRange(hsv_format, colorLower, colorUpper)
+        green_mask = cv2.erode(green_mask, None, iterations=2)
+        green_mask = cv2.dilate(green_mask, None, iterations=2)
 
         # Finding the contours; Function will return a tuple or two items. We will only need the first:
-        contours,extra = cv2.findContours(redish_mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+        contours,ext = cv2.findContours(green_mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
 
         # Track the center
         center = None
@@ -154,9 +154,6 @@ def color_tracker():
             y_diff = pts[9][1] - pts[0][1]  # 2nd frame
             (dX, dY) = (x_diff, y_diff)
          
-            cv2.putText(frame, direction, (20, 40),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
-
         if (abs(dX) > num_threshold[0] or abs(dY) > num_threshold[1]):
             #setting direction
             if(abs(dX) > abs(dY)):
