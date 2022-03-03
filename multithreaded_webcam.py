@@ -8,6 +8,10 @@ from threading import Thread
 class WebcamVideoStream:
     def __init__(self):
         self.stream = cv2.VideoCapture(0)
+        if not self.stream.isOpened():
+            print("Cannot open camera")
+        # else:
+            # self.stream.open(0)
         self.ret, self.frame = self.stream.read()
         self.stopped = False
 
