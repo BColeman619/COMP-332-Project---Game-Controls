@@ -1,3 +1,6 @@
+from glob import glob
+from turtle import reset, up
+from unittest import result
 import pyautogui
 
 last_position = (None, None)
@@ -204,53 +207,98 @@ def finger_tracking():
     import multithreaded_webcam as mw
     import mediapipe as mp
 
-    cap = cv2.VideoCapture(0)
-    # TODO: change this and am
-    mpHands = mp.solutions.hands
-    hands = mpHands.Hands(static_image_mode=False,
-                          max_num_hands=2,
-                          min_detection_confidence=0.5,
-                          min_tracking_confidence=0.5)
+    # Sleep for 2 seconds to let camera initialize properly
+    time.sleep(2)
+
+    video_stream = mw.WebcamVideoStream().start()
+    
+    #hand detection
+    one_hand = mp.solutions.hands
+
+    #getting basic info
+    hands = one_hand.Hands(static_image_mode=False,max_num_hands=2,min_detection_confidence=0.5,min_tracking_confidence=0.5)
+
+    #draw
     mpDraw = mp.solutions.drawing_utils
 
-    pTime = 0
-    cTime = 0
+    #track last direction 
+    global last_dir
 
     while True:
-        success, img = cap.read()
-        imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        results = hands.process(imgRGB)
-    # print(results.multi_hand_landmarks)
 
-        if results.multi_hand_landmarks:
+        FingerCount = 0
+        landmarkList = []
+
+        # Reading the frame from the video stream
+        frame = video_stream.read()
+        # Using that frame, you will flip it
+        frame = cv2.flip(frame, 1)
+        # You will then resize the frame
+        frame = imutils.resize(frame, width=600)
+        #cnvert to RGB
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # print(results.multi_hand_landmarks)
+
+        #get results from processing the image for hands
+        results = hands.process(rgb)
+
+        landmarks = results.multi_hand_landmarks
+
+        #for loop to go though all of the "multi_hand_landmarks" 
+        if landmarks != None:
             for handLms in results.multi_hand_landmarks:
                 for id, lm in enumerate(handLms.landmark):
-                    print(id, lm)
-                    h, w, c = img.shape
+                    h, w = rgb.shape[0:2]         #getting dimensions 
                     cx, cy = int(lm.x * w), int(lm.y*h)
-                    # if id ==0:
-                    cv2.circle(img, (cx, cy), 3, (255, 0, 255), cv2.FILLED)
+                    cv2.circle(rgb, (cx, cy), 3, (255, 0, 255), cv2.FILLED) #see on frame
+                    landmarkList.append((id,cx,cy))  # append values to landmark list 
+                mpDraw.draw_landmarks(frame, handLms, one_hand.HAND_CONNECTIONS)   #draw
+            
+            if landmarkList != None:
+                thumb = landmarkList[4][1] < landmarkList[3][1]
+                index = landmarkList[8][2] < landmarkList[6][2]
+                middle = landmarkList[12][2] < landmarkList[10][2]
+                ring = landmarkList[16][2] < landmarkList[14][2]
+                little = landmarkList[20][2] < landmarkList[18][2]
 
-                mpDraw.draw_landmarks(img, handLms, mpHands.HAND_CONNECTIONS)
-
-                #Thumb: landmarkList[4][1] < landmarkList[3][1]
-                # Index finger: landmarkList[8][2] < landmarkList[6][2]
-                # Middle finger: landmarkList[12][2] < landmarkList[10][2]
-                # Ring finger: landmarkList[16][2] < landmarkList[14][2]
-                # Little finger: landmarkList[20][2] < landmarkList[18][2]
-
-        cTime = time.time()
-        fps = 1/(cTime-pTime)
-        pTime = cTime
-
-        cv2.putText(img, str(int(fps)), (10, 70),
-                    cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 3)
-
-        cv2.imshow("Image", img)
+            if thumb == True:        #keeping track of the number of fingers held up
+                FingerCount +=1
+            if index == True:
+                FingerCount +=1
+            if middle == True:
+                FingerCount +=1
+            if ring == True:
+                FingerCount +=1
+            if little == True:
+                FingerCount +=1
+            
+            if FingerCount != 0:     #mapping controls to appropriate finger value 
+                if FingerCount == 1 and last_dir != "up":
+                    pyautogui.press("up")
+                    print("up")
+                    FingerCount = 1
+                    last_dir = "up"
+                if FingerCount == 2 and last_dir != "down":
+                    pyautogui.press("down")
+                    print("down")
+                    FingerCount = 2
+                    last_dir = "down"
+                if FingerCount == 3 and last_dir != "left":
+                    pyautogui.press("left")
+                    print("left")
+                    FingerCount = 3
+                    last_dir = "left"
+                if FingerCount == 4 and last_dir != "right":
+                    pyautogui.press("right")
+                    print("right")
+                    FingerCount = 4
+                    last_dir = "right"
+                
+        #display finger counts on screen
+        cv2.putText(frame, str(int(FingerCount)), (10, 70),cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 3)
+        cv2.imshow("Image", frame)
         cv2.waitKey(1)
-    # put your code here
-
-
+    
 # End finger_tracking()----------------------------------------------------- #
 
 
